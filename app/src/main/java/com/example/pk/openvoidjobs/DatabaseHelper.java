@@ -11,6 +11,9 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
 
+    //class to insert accounts into sqlite database
+
+
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "accounts.db";
     private static final String TABLE_NAME = "accounts";
@@ -21,14 +24,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     SQLiteDatabase db;
 
+    //create table below
+
     private static final String TABLE_CREATE = "create table "+TABLE_NAME+" (id integer primary key not null , " +
             "name text not null, email text not null, pass text not null);";
+
+    //initiliase database and give it the context
 
     public DatabaseHelper(Context context) {
 
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
 
     }
+
+    //insert account into database
 
     public void insertAccount(Account a) {
 
@@ -48,6 +57,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_NAME, null, values);
         db.close();
     }
+
+    //searches for password using email
 
     public String searchPass(String email) {
 
@@ -87,6 +98,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         this.db = db;
 
     }
+
+    //to update table values
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

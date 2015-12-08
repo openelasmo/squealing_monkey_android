@@ -9,10 +9,14 @@ import android.widget.TextView;
  */
 public class LandingActivity extends AppCompatActivity {
 
+    // shown when user logs in
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
+
+        //receives intent from Loginactivity with either email or username
         String username = getIntent().getStringExtra("Username");
 
         TextView tv = (TextView)findViewById(R.id.TVusername);

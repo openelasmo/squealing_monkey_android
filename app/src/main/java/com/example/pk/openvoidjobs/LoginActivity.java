@@ -19,10 +19,14 @@ import butterknife.ButterKnife;
  */
 public class LoginActivity extends AppCompatActivity {
 
+    //called on Login page
+
     DatabaseHelper helper = new DatabaseHelper(this);
 
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
+
+    //initialise views using ButterKnife
 
     @Bind(R.id.input_email) EditText _emailText;
     @Bind(R.id.input_password) EditText _passwordText;
@@ -35,6 +39,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
+        //initialise login button below
+
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -43,6 +49,8 @@ public class LoginActivity extends AppCompatActivity {
                 login();
             }
         });
+
+        //intialise Register link below
 
         _signupLink.setOnClickListener(new View.OnClickListener() {
 
@@ -59,10 +67,12 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
+    // login method
+
     public void login() {
 
         Log.d(TAG, "Login");
-
+        //ensures that fields are correct by calling validate method
         if (!validate()) {
             onLoginFailed();
             return;
@@ -79,17 +89,19 @@ public class LoginActivity extends AppCompatActivity {
 
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
-
+        //retrieves email and password details from sqlite database
         // TODO: Implement your own authentication logic here.
 
         String passwordcheck = helper.searchPass(email);
-
+        // checks if password is correct on sqlite database
         if(passwordcheck.equals(password)) {
 
             new android.os.Handler().postDelayed(
                     new Runnable() {
                         public void run() {
                             // On complete call either onLoginSuccess or onLoginFailed
+                            //passes email field to onLoginSuccess so it can be put on an intent for
+                            //landing activity
                             String email = _emailText.getText().toString();
                             onLoginSuccess(email);
 
@@ -115,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     }
-
+    //retrieves the intent from SignupActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_SIGNUP) {
@@ -134,7 +146,7 @@ public class LoginActivity extends AppCompatActivity {
         // disable going back to the MainActivity
         moveTaskToBack(true);
     }
-
+    // If login is successful call the LandingActivity class
     public void onLoginSuccess(String name) {
         _loginButton.setEnabled(true);
         Toast.makeText(getBaseContext(), "Login successful", Toast.LENGTH_LONG).show();
@@ -151,7 +163,7 @@ public class LoginActivity extends AppCompatActivity {
 
         _loginButton.setEnabled(true);
     }
-
+    // checks if fields match required rules
     public boolean validate() {
         boolean valid = true;
 

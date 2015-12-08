@@ -19,6 +19,7 @@ import butterknife.ButterKnife;
  */
 public class SignupActivity extends AppCompatActivity {
 
+    //call database helper for inserting values into sqlite database
     DatabaseHelper helper = new DatabaseHelper(this);
 
     private static final String TAG = "SignupActivity";
@@ -35,7 +36,7 @@ public class SignupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
         ButterKnife.bind(this);
-
+        //intialise buttons below
         _signupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -51,10 +52,10 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
     }
-
+    // signup method
     public void signup() {
         Log.d(TAG, "Signup");
-
+        // check fields in validate method
         if (!validate()) {
             onSignupFailed();
             return;
@@ -67,7 +68,7 @@ public class SignupActivity extends AppCompatActivity {
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Creating Account...");
         progressDialog.show();
-
+        // get fields and insert into accounts database table
         String name = _nameText.getText().toString();
         String email = _emailText.getText().toString();
         String password = _passwordText.getText().toString();
@@ -94,7 +95,7 @@ public class SignupActivity extends AppCompatActivity {
                     }
                 }, 3000);
     };
-
+    // finish() closes signup activity and calls LoginActivity and puts name data into intent
     public void onSignupSuccess() {
         _signupButton.setEnabled(true);
         String name = _nameText.getText().toString();
