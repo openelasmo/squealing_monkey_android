@@ -5,6 +5,8 @@ package com.example.pk.openvoidjobs;
  */
 public class Account {
 
+    //this class is the setters and getters for the users
+
     String name, email, pass;
 
     public void setName(String name) {

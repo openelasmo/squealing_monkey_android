@@ -12,6 +12,8 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
+    //this activity is a placeholder, calls LoginActivity straight away
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
