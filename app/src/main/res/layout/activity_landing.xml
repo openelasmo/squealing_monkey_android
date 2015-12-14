@@ -24,5 +24,14 @@
         android:text="JSON String"
         android:id="@+id/restJSONget" />
 
+    <TextView android:id="@+id/link_viewjobs"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="View Jobs"
+        android:textColor="#0019ff"
+        android:gravity="center"
+        android:textSize="32dip"/>
+
 
 </LinearLayout>
