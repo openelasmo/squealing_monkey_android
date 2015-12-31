@@ -17,12 +17,7 @@
         android:text=""
         android:id="@+id/TVusername" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="JSON String"
-        android:id="@+id/restJSONget" />
+
 
     <TextView android:id="@+id/link_viewjobs"
         android:layout_width="fill_parent"

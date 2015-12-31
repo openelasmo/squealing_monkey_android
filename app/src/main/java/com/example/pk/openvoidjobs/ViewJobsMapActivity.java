@@ -1,10 +1,17 @@
 package com.example.pk.openvoidjobs;
 
 import android.app.SearchManager;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.view.GravityCompat;
@@ -19,15 +26,21 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  * Created by Kieran on 09/12/2015.
  */
-public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class ViewJobsMapActivity extends AppCompatActivity
+        implements GoogleMap.OnMapLongClickListener, GoogleMap.OnInfoWindowClickListener,
+        OnMapReadyCallback, GoogleMap.OnMarkerClickListener, LoaderManager.LoaderCallbacks<Cursor> {
 
     private LatLng defaultLatLng = new LatLng(51.501531, -0.141901);
     private int zoomLevel = 10;
@@ -38,6 +51,7 @@ public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReady
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private String[] mPlanetTitles;
+    private GoogleMap map;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +63,7 @@ public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReady
         mapFragment.getMapAsync(this);
 
         mTitle = mDrawerTitle = getTitle();
-        mPlanetTitles = getResources().getStringArray(R.array.planets_array);
+        mPlanetTitles = getResources().getStringArray(R.array.job_filter_array);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
@@ -89,11 +103,22 @@ public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReady
             selectItem(0);
         }
 
+
     }
 
     @Override
-    public void onMapReady(GoogleMap map) {
+    public void onMapReady(GoogleMap retMap) {
         // Add a few dummy markers, and move the camera to start at default position.
+        map = retMap;
+        map.setOnMapLongClickListener(this);
+        // Set a listener for info window events.
+        map.setOnInfoWindowClickListener(this);
+
+        setUpMap();
+
+    }
+
+    public void setUpMap() {
 
         map.addMarker(new MarkerOptions().position(defaultLatLng).title("Queen lives here"));
 
@@ -110,6 +135,154 @@ public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReady
 
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(defaultLatLng, zoomLevel));
 
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        //display in short period of time
+        Toast.makeText(getApplicationContext(), "msg msg", Toast.LENGTH_SHORT).show();
+        map.addMarker(new MarkerOptions()
+                .position(latLng));
+        // Creating an instance of ContentValues
+        ContentValues contentValues = new ContentValues();
+
+        // Setting latitude in ContentValues
+        contentValues.put(LocationsDB.FIELD_LAT, latLng.latitude );
+
+        // Setting longitude in ContentValues
+        contentValues.put(LocationsDB.FIELD_LNG, latLng.longitude);
+
+        // Setting zoom in ContentValues
+        contentValues.put(LocationsDB.FIELD_ZOOM, map.getCameraPosition().zoom);
+
+        // Setting zoom in ContentValues
+        contentValues.put(LocationsDB.FIELD_TAG, latLng.toString());
+
+        // Creating an instance of LocationInsertTask
+        LocationInsertTask insertTask = new LocationInsertTask();
+
+        // Storing the latitude, longitude and zoom level to SQLite database
+        insertTask.execute(contentValues);
+
+        Toast.makeText(getBaseContext(), "Marker is added to the Map", Toast.LENGTH_SHORT).show();
+
+
+
+    }
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        marker.showInfoWindow();
+        return false;
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        Toast.makeText(this, "Info window clicked",
+                Toast.LENGTH_SHORT).show();
+        // Removing all markers from the Google Map
+        map.clear();
+
+        // Creating an instance of LocationDeleteTask
+        LocationDeleteTask deleteTask = new LocationDeleteTask();
+
+        // Deleting all the rows from SQLite database table
+        deleteTask.execute();
+
+        Toast.makeText(getBaseContext(), "All markers are removed", Toast.LENGTH_LONG).show();
+    }
+
+
+    private class LocationInsertTask extends AsyncTask<ContentValues, Void, Void> {
+        @Override
+        protected Void doInBackground(ContentValues... contentValues) {
+
+            /** Setting up values to insert the clicked location into SQLite database */
+            getContentResolver().insert(LocationsContentProvider.CONTENT_URI, contentValues[0]);
+
+            return null;
+        }
+    }
+
+    private class LocationDeleteTask extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            /** Deleting all the locations stored in SQLite database */
+            getContentResolver().delete(LocationsContentProvider.CONTENT_URI, null, null);
+            return null;
+        }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int arg0,
+                                         Bundle arg1) {
+
+        // Uri to the content provider LocationsContentProvider
+        Uri uri = LocationsContentProvider.CONTENT_URI;
+
+        // Fetches all the rows from locations table
+        return new CursorLoader(this, uri, null, null, null, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> arg0,
+                               Cursor arg1) {
+        int locationCount = 0;
+        double lat=0;
+        double lng=0;
+        float zoom=0;
+        String tag="blank entry";
+
+
+        // Number of locations available in the SQLite database table
+        locationCount = arg1.getCount();
+
+        // Move the current record pointer to the first row of the table
+        arg1.moveToFirst();
+
+        for(int i=0;i<locationCount;i++){
+
+            // Get the latitude
+            lat = arg1.getDouble(arg1.getColumnIndex(LocationsDB.FIELD_LAT));
+
+            // Get the longitude
+            lng = arg1.getDouble(arg1.getColumnIndex(LocationsDB.FIELD_LNG));
+
+            // Get the zoom level
+            zoom = arg1.getFloat(arg1.getColumnIndex(LocationsDB.FIELD_ZOOM));
+
+            // Get the tag
+            tag = arg1.getString(arg1.getColumnIndex(LocationsDB.FIELD_TAG));
+
+            // Creating an instance of LatLng to plot the location in Google Maps
+            LatLng location = new LatLng(lat, lng);
+
+            // Drawing the marker in the Google Maps
+            map.addMarker(new MarkerOptions()
+                    .position(location)
+                    .snippet(tag)
+                    .title(tag));
+
+            Toast.makeText(getBaseContext(), "Loader loaded", Toast.LENGTH_SHORT).show();
+            // Traverse the pointer to the next row
+            arg1.moveToNext();
+        }
+
+        if(locationCount>0){
+            // Moving CameraPosition to last clicked position
+            map.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lat,lng)));
+            // Setting the zoom level in the map on last position  is clicked
+            map.animateCamera(CameraUpdateFactory.zoomTo(zoom));
+        }
+        else {
+
+            Toast.makeText(getBaseContext(), "Loader error", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> arg0) {
+        // TODO Auto-generated method stub
     }
 
     @Override
@@ -152,6 +325,9 @@ public class ViewJobsMapActivity extends AppCompatActivity implements OnMapReady
                 return super.onOptionsItemSelected(item);
         }
     }
+
+
+
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override

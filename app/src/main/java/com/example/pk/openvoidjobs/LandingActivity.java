@@ -27,7 +27,6 @@ import java.net.URLEncoder;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
-//import com.example.pk.openvoidjobs.DownloadWebpageTask.AsyncResponse;
 
 /**
  * Created by PK on 04/12/2015.
